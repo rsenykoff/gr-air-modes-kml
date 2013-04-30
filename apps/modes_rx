@@ -86,10 +86,17 @@ class adsb_rx_block (gr.top_block):
         if not self.u.set_center_freq(options.freq):
             print "Failed to set initial frequency"
 
-        self.u.set_gain_mode(0) #manual gain mode
+        #self.u.set_gain_mode(0) #manual gain mode
+        #if options.gain is None:
+        #    options.gain = 34
+        #self.u.set_gain_mode(0) #manual gain mode
         if options.gain is None:
-            options.gain = 34
-            
+	    self.u.set_gain_mode(1) #0 is manual mode
+            options.gain = 0 # 0 for the gain itself is suppsed to indicate AGC 
+	    print "Enabling AGC - for manual control use the -g option"
+	else:
+	    self.u.set_gain_mode(0) #manual gain mode
+             
         self.u.set_gain(options.gain)
         print "Gain is %i" % self.u.get_gain()
 

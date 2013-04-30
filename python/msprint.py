@@ -19,7 +19,7 @@
 # Boston, MA 02110-1301, USA.
 # 
 
-import time, os, sys
+import time, os, sys, datetime
 from string import split, join
 import air_modes
 from air_modes.exceptions import *
@@ -45,6 +45,9 @@ class output_print(air_modes.parse):
     try:
       data = air_modes.modes_reply(long(data, 16))
       msgtype = data["df"]
+      ts = time.time()
+      output += datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+      output += " "
       if msgtype == 0:
         output += self.print0(data, ecc)
       elif msgtype == 4:
