@@ -21,8 +21,6 @@
 
 import sqlite3
 import string, math, threading, time
-import numpy as np
-import colorsys
 
 class output_kml(threading.Thread):
     def __init__(self, filename, dbname, localpos, lock, timeout=5):
@@ -80,44 +78,33 @@ class output_kml(threading.Thread):
             bearing = i*(2*math.pi/steps) #in radians
             lat_out = math.degrees(math.asin(math.sin(lat_rad)*math.cos(tmp0) + math.cos(lat_rad)*math.sin(tmp0)*math.cos(bearing)))
             lon_out = center_lon + math.degrees(math.atan2(math.sin(bearing)*math.sin(tmp0)*math.cos(lat_rad), math.cos(tmp0)-math.sin(lat_rad)*math.sin(math.radians(lat_out))))
-            retstr += " %.8f,%.8f, 500.0000" % (lon_out, lat_out,)
+            retstr += " %.8f,%.8f, 0" % (lon_out, lat_out,)
 
         retstr = string.lstrip(retstr)
         return retstr
-
-    def _get_colors(num_colors):
-	colors=[]
-	for i in np.arrange(0., 360., 360. / num_colors):
-           hue = i/360.
-           lightness = (50 + np.random.rand() * 10)/100.
-           saturation = (90 + np.random.rand() * 10)/100.
-           colors.append(colorsys.hls_to_rgb(hue, lightness, saturation))
-    	return colors
     
     def genkml(self):
         #first let's draw the static content
-        #retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>9f4f4faf</color>\n\t\t<width>2</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>7f07d5f5</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
-        retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>5143CCC</color>\n\t\t<width>2</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>5143CFF</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
+        retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>9f4f4faf</color>\n\t\t<width>2</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>9142CFF</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
 
         if self.my_coords is not None:
             retstr += """\n\t<Folder>\n\t\t<name>Range rings</name>\n\t\t<open>0</open>"""
-            for rng in [25, 50, 75, 100, 200, 300]:     
+            for rng in [25, 50, 100, 200, 300]:     
                 retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
             retstr += """\t</Folder>\n"""
         
         retstr +=  """\t<Folder>\n\t\t<name>Aircraft locations</name>\n\t\t<open>0</open>"""
 
         #read the database and add KML
-        q = "select distinct icao from positions where seen > datetime('now', '-240 minute')"
+        q = "select distinct icao from positions where seen > datetime('now', '-60 minute')"
         c = self._db.cursor()
         self.locked_execute(c, q)
         icaolist = c.fetchall()
         #now we have a list icaolist of all ICAOs seen in the last 5 minutes
 
-	colors = self._get_colors(len(icaolist))
         for icao in icaolist:
             #print "ICAO: %x" % icao
-            q = "select * from positions where icao=%i and seen > datetime('now', '-15 minute') ORDER BY seen DESC" % icao
+            q = "select * from positions where icao=%i and seen > datetime('now', '-24 hour') ORDER BY seen DESC" % icao
             self.locked_execute(c, q)
             track = c.fetchall()
             #print "Track length: %i" % len(track)
@@ -135,7 +122,6 @@ class output_kml(threading.Thread):
                 
                 for pos in track:
                     trackstr += " %f,%f,%f" % (pos[4], pos[3], pos[2]*0.3048)
-		    #trackstr += " -71.13824,42.426747,020.000000" 
 
                 trackstr = string.lstrip(trackstr)
             else:
@@ -169,12 +155,9 @@ class output_kml(threading.Thread):
                 heading = 0
                 vertical = 0        
             #now generate some KML
-
-    #def _get_colors(num_colors):
-	#colors=[]
-            #retstr+= "\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t\t\t<styleUrl>#airplane</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: %i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: %s<br/><a href='http://flightaware.com/live/flight/%s'>View on flightaware.com</a><br/>]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</extrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, heading, speed, vertical, icao[0], seen, ident, lon, lat, metric_alt, )
-            retstr+= "\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t\t\t<styleUrl>#airplane</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: %i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: %s<br/><a href='http://flightaware.com/live/flight/%s'>View on flightaware.com</a><br/>]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</extrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, heading, speed, vertical, icao[0], seen, ident, lon, lat, metric_alt, )
-
+            #retstr+= #"\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t#\t\t<styleUrl>#airplane</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: #%i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: #%s]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</e#xtrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, #heading, speed, vertical, icao[0], seen, lon, lat, metric_alt, )
+	    retstr+= "\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t\t\t<styleUrl>#airplane</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: %i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: %s<br/><a href='http://flightaware.com/live/flight/%s'>View on flightaware.com</a><br/>]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</extrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, heading, speed, vertical, icao[0], seen, ident, lon, lat, metric_alt, )
+            
             retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#track</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
 
         retstr+= '\n\t</Folder>\n</Document>\n</kml>'
