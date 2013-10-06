@@ -71,32 +71,35 @@ class output_kml(threading.Thread):
 
         lat_rad = math.radians(center_lat)
         lon_rad = math.radians(center_lon)
-
-        tmp0 = rng / earth_radius_mi
-
+        
+	tmp0 = rng / earth_radius_mi
+	
         for i in range(0, steps+1):
             bearing = i*(2*math.pi/steps) #in radians
             lat_out = math.degrees(math.asin(math.sin(lat_rad)*math.cos(tmp0) + math.cos(lat_rad)*math.sin(tmp0)*math.cos(bearing)))
             lon_out = center_lon + math.degrees(math.atan2(math.sin(bearing)*math.sin(tmp0)*math.cos(lat_rad), math.cos(tmp0)-math.sin(lat_rad)*math.sin(math.radians(lat_out))))
-            retstr += " %.8f,%.8f, 0" % (lon_out, lat_out,)
+            retstr += " %.8f,%.8f, 0" % (lon_out, lat_out, )
 
         retstr = string.lstrip(retstr)
         return retstr
     
     def genkml(self):
         #first let's draw the static content
-        retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>904f4faf</color>\n\t\t<width>3</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>6414B4FA</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
+        #retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>904f4faf</color>\n\t\t<width>3</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>6414B4FA</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
+	#retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/purple_drone.png</href></Icon>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>904f4faf</color>\n\t\t<width>3</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>6414B4FA</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
+	retstr="""<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n\t<Style id="airplane">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/120px-Galaga_Fighter.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t<Style id="rangering">\n\t<LineStyle>\n\t\t<color>904f4faf</color>\n\t\t<width>3</width>\n\t</LineStyle>\n\t</Style>\n\t<Style id="track">\n\t<LineStyle>\n\t\t<color>6414B4FA</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"""
 
         if self.my_coords is not None:
             retstr += """\n\t<Folder>\n\t\t<name>Range rings</name>\n\t\t<open>0</open>"""
-            for rng in [25, 50, 100, 200, 300]:     
+            for rng in [100, 200, 300]:     
                 retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
             retstr += """\t</Folder>\n"""
         
         retstr +=  """\t<Folder>\n\t\t<name>Aircraft locations</name>\n\t\t<open>0</open>"""
 
         #read the database and add KML
-        q = "select distinct icao from positions where seen > datetime('now', '-20 minute')"
+	#q = "select distinct icao from positions where seen > datetime('now', '-2 minute')"
+        q = "select distinct icao from positions where seen > datetime('now', '-8 hour')"
         c = self._db.cursor()
         self.locked_execute(c, q)
         icaolist = c.fetchall()
@@ -104,7 +107,7 @@ class output_kml(threading.Thread):
 
         for icao in icaolist:
             #print "ICAO: %x" % icao
-            q = "select * from positions where icao=%i and seen > datetime('now', '-2 hour') ORDER BY seen DESC" % icao
+            q = "select * from positions where icao=%i and seen > datetime('now', '-8 hour') ORDER BY seen DESC" % icao
             self.locked_execute(c, q)
             track = c.fetchall()
             #print "Track length: %i" % len(track)
@@ -131,7 +134,7 @@ class output_kml(threading.Thread):
                 lon = 0
                 trackstr = str("")
 
-            #now get metadata
+            ##now get metadata
             q = "select ident from ident where icao=%i" % icao
             self.locked_execute(c, q)
             r = c.fetchall()
@@ -148,7 +151,6 @@ class output_kml(threading.Thread):
                 speed = r[0][1]
                 heading = r[0][2]
                 vertical = r[0][3]
-
             else:
                 seen = 0
                 speed = 0
