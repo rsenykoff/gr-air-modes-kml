@@ -91,15 +91,15 @@ class output_kml(threading.Thread):
 
         if self.my_coords is not None:
             retstr += """\n\t<Folder>\n\t\t<name>Range rings</name>\n\t\t<open>0</open>"""
-            for rng in [100, 200, 300]:     
-                retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
+            #for rng in [100, 200, 300]:     
+            #    retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
             retstr += """\t</Folder>\n"""
         
         retstr +=  """\t<Folder>\n\t\t<name>Aircraft locations</name>\n\t\t<open>0</open>"""
 
         #read the database and add KML
-	#q = "select distinct icao from positions where seen > datetime('now', '-2 minute')"
-        q = "select distinct icao from positions where seen > datetime('now', '-8 hour')"
+	q = "select distinct icao from positions where seen > datetime('now', '-20 minute')"
+        #q = "select distinct icao from positions where seen > datetime('now', '-48 hour')"
         c = self._db.cursor()
         self.locked_execute(c, q)
         icaolist = c.fetchall()
@@ -107,6 +107,7 @@ class output_kml(threading.Thread):
 
         for icao in icaolist:
             #print "ICAO: %x" % icao
+            #q = "select * from positions where icao=%i and seen > datetime('now', '-48 hour') ORDER BY seen DESC" % icao
             q = "select * from positions where icao=%i and seen > datetime('now', '-8 hour') ORDER BY seen DESC" % icao
             self.locked_execute(c, q)
             track = c.fetchall()
