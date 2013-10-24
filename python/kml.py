@@ -94,24 +94,32 @@ class output_kml(threading.Thread):
 	retstr += "<Style id=\"xwing\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/512px-X_Wing_Game_Fighter.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
 	retstr += "<Style id=\"galagaFlagship1\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/Galaga_Flagship1.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
 	retstr += "<Style id=\"galagaFlagship2\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/Galaga_Flagship2.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
-	retstr += "<Style id=\"galagaButterfly\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/Galaga_Butterfly.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
+	retstr += "<Style id=\"galagaButterfly\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/Galaga_Butterfly.png</href></Icon>\n\t\t<scale>.5</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
 	retstr += "<Style id=\"galagaBee\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/galaga_bee__animated_gif__by_bradiiez-d5ct0id.png</href></Icon>\n\t\t<scale>1.1</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
 	retstr += "<Style id=\"galagaFighter\">\n\t\t<IconStyle>\n\t\t\t<Icon><href>http://www.bluemods.com/images/120px-Galaga_Fighter.png</href></Icon>\n\t\t<scale>.7</scale>\n\t\t</IconStyle>\n\t</Style>\n\t"
 	retstr += "<Style id=\"rangering\">\n\t<LineStyle>\n\t\t<color>904f4faf</color>\n\t\t<width>3</width>\n\t</LineStyle>\n\t</Style>\n\t"
 	
 	retstr += "<Style id=\"track\">\n\t<LineStyle>\n\t\t<color>6414B4FA</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"tracklow\">\n\t<LineStyle>\n\t\t<color>5078FFF0</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"trackmid\">\n\t<LineStyle>\n\t\t<color>5014F0DC</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"trackmid37\">\n\t<LineStyle>\n\t\t<color>5014F0FF</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"trackmid40\">\n\t<LineStyle>\n\t\t<color>507878F0</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"trackmid42\">\n\t<LineStyle>\n\t\t<color>507814F0</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
+	retstr += "<Style id=\"tracksuperhigh\">\n\t<LineStyle>\n\t\t<color>50143CFF</color>\n\t\t<width>4</width>\n\t</LineStyle>\n\t</Style>"
 	
         if self.my_coords is not None:
             retstr += """\n\t<Folder>\n\t\t<name>Range rings</name>\n\t\t<open>0</open>"""
-            #for rng in [100, 200, 300]:     
-            #    retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
+            for rng in [100]:     
+                retstr += """\n\t\t<Placemark>\n\t\t\t<name>%inm</name>\n\t\t\t<styleUrl>#rangering</styleUrl>\n\t\t\t<LinearRing>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LinearRing>\n\t\t</Placemark>""" % (rng, self.draw_circle(self.my_coords, rng),)
             retstr += """\t</Folder>\n"""
         
         retstr +=  """\t<Folder>\n\t\t<name>Aircraft locations</name>\n\t\t<open>0</open>"""
 
         #read the database and add KML
-	#q = "select distinct icao from positions where seen > datetime('now', '-20 minute')"
-        q = "select distinct icao from positions where seen > datetime('now', '-4 hour')"
+	#q = "select distinct icao from positions where seen > datetime('now', '-3 minute')"
+	q = "select distinct icao from positions where seen > datetime('now', '-30 minute')"
+        #q = "select distinct icao from positions where seen > datetime('now', '-2 hour')"
+        #q = "select distinct icao from positions where seen > datetime('now', '-6 hour')"
         c = self._db.cursor()
         self.locked_execute(c, q)
         icaolist = c.fetchall()
@@ -120,7 +128,7 @@ class output_kml(threading.Thread):
         for icao in icaolist:
             #print "ICAO: %x" % icao
             #q = "select * from positions where icao=%i and seen > datetime('now', '-48 hour') ORDER BY seen DESC" % icao
-            q = "select * from positions where icao=%i and seen > datetime('now', '-4 hour') ORDER BY seen DESC" % icao
+            q = "select * from positions where icao=%i and seen > datetime('now', '-90 minute') ORDER BY seen DESC" % icao
             self.locked_execute(c, q)
             track = c.fetchall()
             #print "Track length: %i" % len(track)
@@ -184,8 +192,24 @@ class output_kml(threading.Thread):
 		retstr+= "\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t\t\t<styleUrl>#galagaBee</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: %i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: %s<br/><a href='http://flightaware.com/live/flight/%s'>View on flightaware.com</a><br/>]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</extrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, heading, speed, vertical, icao[0], seen, ident, lon, lat, metric_alt, )
 	    else:
 		retstr+= "\n\t\t<Placemark>\n\t\t\t<name>%s</name>\n\t\t\t<Style><IconStyle><heading>%i</heading></IconStyle></Style>\n\t\t\t<styleUrl>#galagaFighter</styleUrl>\n\t\t\t<description>\n\t\t\t\t<![CDATA[Altitude: %s<br/>Heading: %i<br/>Speed: %i<br/>Vertical speed: %i<br/>ICAO: %x<br/>Last seen: %s<br/><a href='http://flightaware.com/live/flight/%s'>View on flightaware.com</a><br/>]]>\n\t\t\t</description>\n\t\t\t<Point>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<extrude>1</extrude>\n\t\t\t\t<coordinates>%s,%s,%i</coordinates>\n\t\t\t</Point>\n\t\t</Placemark>" % (ident, heading, alt, heading, speed, vertical, icao[0], seen, ident, lon, lat, metric_alt, )
-            
-            retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#track</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+		
+		
+            if altitude_int < 5000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#track</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    elif altitude_int < 10000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#tracklow</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    elif altitude_int < 20000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#trackmid</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    elif altitude_int < 28000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#trackmid37</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    elif altitude_int < 38000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#trackmid40</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    elif altitude_int < 40000:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#tracksuperhigh</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    else:
+	      retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#tracksuperhigh</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
+	    #else:
+	      #retstr+= "\n\t\t<Placemark>\n\t\t\t<styleUrl>#track</styleUrl>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>%s</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>" % (trackstr,)
 
         retstr+= '\n\t</Folder>\n</Document>\n</kml>'
         return retstr
