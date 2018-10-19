@@ -2,6 +2,7 @@ This is my modification to gr-air-modes. It can be tweaked to plot over a longer
 aircraft have been replaced with some fun icons. Depending on altitude they get different icons. -Ron
 
 Here's a screenshot from Google Earth, where I used aircraft positions over a 24 hour period to model antenna reception pattern.
+
 ![AntennaPattern](AntennaPattern.png?raw=true "Antenna Pattern")
 
 ========================================================================
