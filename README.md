@@ -5,7 +5,11 @@ aircraft have been replaced with some fun icons. Depending on altitude they get 
 
 Here's a screenshot from Google Earth, where I used aircraft positions over a 24 hour period to model antenna reception pattern.
 
-![Antenna Pattern](AntennaPattern.png?raw=true "Title")
+![Antenna Pattern](AntennaPattern.png?raw=true "1090 MHz Antenna Reception Pattern")
+
+Here we see aircraft traffic combined with a weather overlay
+![ADS-B With Weather](wx-overlay.png?raw=true "ADS-B With Weather Overlay")
+
 
 ========================================================================
 Copyright 2010, 2011, 2012 Nick Foster
