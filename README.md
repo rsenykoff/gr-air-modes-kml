@@ -8,7 +8,7 @@ Here's a screenshot from Google Earth, where I used aircraft positions over a 24
 ![Antenna Pattern](AntennaPattern.png?raw=true "1090 MHz Antenna Reception Pattern")
 
 Here we see aircraft traffic combined with a weather overlay
-![ADS-B With Weather](wx-overlay.png?raw=true "ADS-B With Weather Overlay")
+![ADS-B With Weather](wx-overlay.jpg?raw=true "ADS-B With Weather Overlay")
 
 
 ========================================================================
